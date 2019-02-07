@@ -1,4 +1,4 @@
-from zope.interface import implements
+from zope.interface import implementer
 from persistent import Persistent
 
 import BTrees
@@ -7,9 +7,13 @@ from BTrees.Length import Length
 
 from repoze.catalog.interfaces import ICatalogIndex
 from repoze.catalog.indexes.common import CatalogIndex
+import six
+from six.moves import range
 
 _marker = ()
 
+
+@implementer(ICatalogIndex)
 class CatalogPathIndex(CatalogIndex):
 
     """Index for model paths (tokens separated by '/' characters)
@@ -33,14 +37,13 @@ class CatalogPathIndex(CatalogIndex):
     - NotEq
 
     """
-    implements(ICatalogIndex)
     useOperator = 'or'
 
     family = BTrees.family32
 
     def __init__(self, discriminator):
         if not callable(discriminator):
-            if not isinstance(discriminator, basestring):
+            if not isinstance(discriminator, six.string_types):
                 raise ValueError('discriminator value must be callable or a '
                                  'string')
         self.discriminator = discriminator
@@ -61,10 +64,10 @@ class CatalogPathIndex(CatalogIndex):
            level is the level of the component inside the path
         """
 
-        if not self._index.has_key(comp):
+        if comp not in self._index:
             self._index[comp] = self.family.IO.BTree()
 
-        if not self._index[comp].has_key(level):
+        if level not in self._index[comp]:
             self._index[comp][level] = self.family.IF.TreeSet()
 
         self._index[comp][level].insert(id)
@@ -99,9 +102,9 @@ class CatalogPathIndex(CatalogIndex):
         if isinstance(path, (list, tuple)):
             path = '/'+ '/'.join(path[1:])
 
-        comps = filter(None, path.split('/'))
+        comps = [_f for _f in path.split('/') if _f]
 
-        if not self._unindex.has_key(docid):
+        if docid not in self._unindex:
             self._length.change(1)
 
         for i in range(len(comps)):
@@ -115,7 +118,7 @@ class CatalogPathIndex(CatalogIndex):
         if docid in _not_indexed:
             _not_indexed.remove(docid)
 
-        if not self._unindex.has_key(docid):
+        if docid not in self._unindex:
             return
 
         comps =  self._unindex[docid].split('/')
@@ -138,7 +141,7 @@ class CatalogPathIndex(CatalogIndex):
         del self._unindex[docid]
 
     def _indexed(self):
-        return self._unindex.keys()
+        return list(self._unindex.keys())
 
     def search(self, path, default_level=0):
         """
@@ -149,23 +152,23 @@ class CatalogPathIndex(CatalogIndex):
         level >= 0  starts searching at the given level
         level <  0  not implemented yet
         """
-        if isinstance(path, basestring):
+        if isinstance(path, six.string_types):
             level = default_level
         else:
             level = int(path[1])
             path  = path[0]
 
-        comps = filter(None, path.split('/'))
+        comps = [_f for _f in path.split('/') if _f]
 
         if len(comps) == 0:
-            return self.family.IF.Set(self._unindex.keys())
+            return self.family.IF.Set(list(self._unindex.keys()))
 
         results = None
         if level >= 0:
             for i, comp in enumerate(comps):
-                if not self._index.has_key(comp):
+                if comp not in self._index:
                     return self.family.IF.Set()
-                if not self._index[comp].has_key(level+i):
+                if level+i not in self._index[comp]:
                     return self.family.IF.Set()
                 results = self.family.IF.intersection(
                     results, self._index[comp][level+i])
@@ -199,13 +202,13 @@ class CatalogPathIndex(CatalogIndex):
         level = 0
         operator = self.useOperator
 
-        if isinstance(query, basestring):
+        if isinstance(query, six.string_types):
             paths = [query]
         elif isinstance(query, (tuple, list)):
             paths = query
         else:
             paths = query.get('query', [])
-            if isinstance(paths, basestring):
+            if isinstance(paths, six.string_types):
                 paths = [ paths ]
             level = query.get('level', 0)
             operator = query.get('operator', self.useOperator).lower()

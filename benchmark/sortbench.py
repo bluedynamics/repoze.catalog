@@ -1,4 +1,5 @@
-import cPickle
+from __future__ import print_function
+import six.moves.cPickle
 import math
 import os
 import random
@@ -16,6 +17,8 @@ from pychart import text_box
 from BTrees.IFBTree import IFSet
 from repoze.catalog.indexes.field import fwscan_wins
 from repoze.catalog.indexes.field import nbest_ascending_wins
+from six.moves import map
+from six.moves import range
 
 theme.get_options()
 theme.use_color = True
@@ -78,7 +81,7 @@ class FieldIndexForwardSort:
         def output(msg):
             tf.write(msg + '\n')
             tf.flush()
-            print msg
+            print(msg)
 
         all_docids = list(self.index._rev_index.keys())
         random.shuffle(all_docids)
@@ -111,11 +114,11 @@ class FieldIndexForwardSort:
 
             main.append({'rlen':rlen, 'capture':capture})
 
-        cPickle.dump(main, open('%s.pck' % self.dbkey, 'w'))
+        six.moves.cPickle.dump(main, open('%s.pck' % self.dbkey, 'w'))
 
     def chart(self):
 
-        self.main = cPickle.load(open('%s.pck' % self.dbkey))
+        self.main = six.moves.cPickle.load(open('%s.pck' % self.dbkey))
 
         for chartable in self.main:
             self.detailchart(chartable)
@@ -194,7 +197,7 @@ class FieldIndexForwardSort:
             test = sortname1 == 'nbest' and sortname2 == 'timsort'
             test_fn = nbest_ascending_wins
 
-            for x in xrange(0, min(len(values1), len(values2))):
+            for x in range(0, min(len(values1), len(values2))):
                 t1 = values1[x]
                 t2 = values2[x]
                 limit = self.limits[x]
@@ -212,15 +215,15 @@ class FieldIndexForwardSort:
                         extra = ''
                         if (t1 /  t2) < .90: # more than 10% difference
                             extra = " * (%0.2f)" % (t1/t2)
-                        print wrongmsg % ('curvelose', rlen, limit, t2, t1,
-                                          extra)
+                        print(wrongmsg % ('curvelose', rlen, limit, t2, t1,
+                                          extra))
                         test_wrong +=1
                     elif (not won) and curvewin:
                         extra = ''
                         if (t2 /  t1) < .90: # more than 10% difference
                             extra = " * (%0.2f)" % (t2/t1)
-                        print wrongmsg % ('curvewin', rlen, limit, t1, t2,
-                                          extra)
+                        print(wrongmsg % ('curvewin', rlen, limit, t1, t2,
+                                          extra))
                         test_wrong +=1
 
             for limit in wins:
@@ -231,8 +234,8 @@ class FieldIndexForwardSort:
             if test_total:
                 test_right = test_total - test_wrong
                 test_percent = test_right / float(test_total)
-                print "test percentage %0.2f: (%s wrong out of %s)" % (
-                    test_percent, test_wrong, test_total)
+                print("test percentage %0.2f: (%s wrong out of %s)" % (
+                    test_percent, test_wrong, test_total))
 
         comparename = 'compare-%s-%s-beats-%s' % (self.dbkey,
                                                   sortname1, sortname2)
@@ -267,7 +270,7 @@ class FieldIndexForwardSort:
 
 def timer(fn, *args, **kw):
     times = []
-    for x in xrange(7):
+    for x in range(7):
         start = time.time()
         result = fn(*args, **kw)
         if not hasattr(result, '__len__'):
@@ -286,7 +289,7 @@ def isect(seq1, seq2):
 def product(*args):
     # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
     # product(range(2), repeat=3) --> 000 001 010 011 100 101 110 111
-    pools = map(tuple, args)
+    pools = list(map(tuple, args))
     result = [[]]
     for pool in pools:
         result = [x+[y] for x in result for y in pool]

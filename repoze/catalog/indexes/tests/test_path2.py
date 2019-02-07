@@ -1,4 +1,5 @@
 import unittest
+from six.moves import range
 
 _marker = object()
 
@@ -118,7 +119,7 @@ class CatalogPathIndex2Tests(unittest.TestCase):
 
     def test_unindex_doc(self):
         index = self._makeOne(VALUES)
-        docids = VALUES.keys()
+        docids = list(VALUES.keys())
 
         for doc_id in docids:
             index.unindex_doc(doc_id)
@@ -161,12 +162,12 @@ class CatalogPathIndex2Tests(unittest.TestCase):
     def test_search_root_nodepth(self):
         index = self._makeOne(VALUES)
         result = index.search('/')
-        self.assertEqual(sorted(result), range(1, 21))
+        self.assertEqual(sorted(result), list(range(1, 21)))
 
     def test_search_root_nodepth_include_path(self):
         index = self._makeOne(VALUES)
         result = index.search('/', include_path=True)
-        self.assertEqual(sorted(result), range(0, 21))
+        self.assertEqual(sorted(result), list(range(0, 21)))
 
     def test_search_root_depth_0(self):
         index = self._makeOne(VALUES)
@@ -201,12 +202,12 @@ class CatalogPathIndex2Tests(unittest.TestCase):
     def test_search_root_depth_3(self):
         index = self._makeOne(VALUES)
         result = index.search('/', depth=3)
-        self.assertEqual(sorted(result), range(1, 21))
+        self.assertEqual(sorted(result), list(range(1, 21)))
 
     def test_search_root_depth_3_include_path(self):
         index = self._makeOne(VALUES)
         result = index.search('/', depth=3, include_path=True)
-        self.assertEqual(sorted(result), range(0, 21))
+        self.assertEqual(sorted(result), list(range(0, 21)))
 
     def test_search_aa_nodepth(self):
         index = self._makeOne(VALUES)
@@ -414,7 +415,7 @@ class CatalogPathIndex2Tests(unittest.TestCase):
         attr_keys = sorted(index.docid_to_attr.keys())
         self.assertEqual(attr_keys, [0, 2, 8, 12])
 
-        docids = VALUES.keys()
+        docids = list(VALUES.keys())
 
         for doc_id in docids:
             index.unindex_doc(doc_id)
@@ -444,7 +445,7 @@ class CatalogPathIndex2Tests(unittest.TestCase):
         index = self._makeOne(VALUES, attr_discriminator='attr')
         attr_checker = DummyAttrChecker()
         result = index.search('/', attr_checker=attr_checker)
-        self.assertEqual(sorted(result), range(1, 21))
+        self.assertEqual(sorted(result), list(range(1, 21)))
         results = sorted(attr_checker.results)
         self.assertEqual(len(results), 4)
         attrs, theset = results[3]
@@ -464,7 +465,7 @@ class CatalogPathIndex2Tests(unittest.TestCase):
         index = self._makeOne(VALUES, attr_discriminator='attr')
         attr_checker = DummyAttrChecker()
         result = index.search('/', include_path=True, attr_checker=attr_checker)
-        self.assertEqual(sorted(result), range(0, 21))
+        self.assertEqual(sorted(result), list(range(0, 21)))
         results = sorted(attr_checker.results)
         self.assertEqual(len(results), 4)
         attrs, theset = results[3]
@@ -566,7 +567,7 @@ class CatalogPathIndex2Tests(unittest.TestCase):
         index = self._makeOne(VALUES, attr_discriminator='attr')
         attr_checker = DummyAttrChecker()
         result = index.search('/', depth=3, attr_checker=attr_checker)
-        self.assertEqual(sorted(result), range(1, 21))
+        self.assertEqual(sorted(result), list(range(1, 21)))
         results = sorted(attr_checker.results)
         self.assertEqual(len(results), 4)
         attrs, theset = results[3]
@@ -587,7 +588,7 @@ class CatalogPathIndex2Tests(unittest.TestCase):
         attr_checker = DummyAttrChecker()
         result = index.search('/', depth=3, include_path=True,
                               attr_checker=attr_checker)
-        self.assertEqual(sorted(result), range(0, 21))
+        self.assertEqual(sorted(result), list(range(0, 21)))
         results = sorted(attr_checker.results)
         self.assertEqual(len(results), 4)
         attrs, theset = results[3]
@@ -834,7 +835,7 @@ class CatalogPathIndex2Tests(unittest.TestCase):
         index = self._makeOne(VALUES2, attr_discriminator='attr')
         attr_checker = DummyAttrChecker()
         result = index.search('/', attr_checker=attr_checker)
-        self.assertEqual(sorted(result), range(1, 6))
+        self.assertEqual(sorted(result), list(range(1, 6)))
         results = sorted(attr_checker.results)
         self.assertEqual(len(results), 6)
         attrs, theset = results[1]
@@ -860,7 +861,7 @@ class CatalogPathIndex2Tests(unittest.TestCase):
         index = self._makeOne(VALUES2, attr_discriminator='attr')
         attr_checker = DummyAttrChecker()
         result = index.search('/', include_path=True, attr_checker=attr_checker)
-        self.assertEqual(sorted(result), range(0, 6))
+        self.assertEqual(sorted(result), list(range(0, 6)))
         results = sorted(attr_checker.results)
         self.assertEqual(len(results), 6)
         attrs, theset = results[1]

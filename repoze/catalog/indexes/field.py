@@ -2,13 +2,14 @@ import bisect
 import heapq
 from itertools import islice
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from zope.index.field import FieldIndex
 
 from repoze.catalog.interfaces import ICatalogIndex
 from repoze.catalog.indexes.common import CatalogIndex
 from repoze.catalog import RangeValue
+import six
 
 _marker = []
 
@@ -17,6 +18,7 @@ NBEST = 'nbest'
 TIMSORT = 'timsort'
 
 
+@implementer(ICatalogIndex)
 class CatalogFieldIndex(CatalogIndex, FieldIndex):
     """ Field indexing.
 
@@ -46,11 +48,10 @@ class CatalogFieldIndex(CatalogIndex, FieldIndex):
 
     - NotInRange
     """
-    implements(ICatalogIndex)
 
     def __init__(self, discriminator):
         if not callable(discriminator):
-            if not isinstance(discriminator, basestring):
+            if not isinstance(discriminator, six.string_types):
                 raise ValueError('discriminator value must be callable or a '
                                  'string')
         self.discriminator = discriminator
@@ -92,7 +93,7 @@ class CatalogFieldIndex(CatalogIndex, FieldIndex):
         self._num_docs.change(-1)
 
     def _indexed(self):
-        return self._rev_index.keys()
+        return list(self._rev_index.keys())
 
     def sort(self, docids, reverse=False, limit=None, sort_type=None):
         if not docids:
@@ -180,7 +181,7 @@ class CatalogFieldIndex(CatalogIndex, FieldIndex):
 
     def nbest_ascending(self, docids, limit):
         if limit is None: #pragma NO COVERAGE
-            raise RuntimeError, 'n-best used without limit'
+            raise RuntimeError('n-best used without limit')
 
         # lifted from heapq.nsmallest
 
@@ -204,7 +205,7 @@ class CatalogFieldIndex(CatalogIndex, FieldIndex):
 
     def nbest_descending(self, docids, limit):
         if limit is None: #pragma NO COVERAGE
-            raise RuntimeError, 'N-Best used without limit'
+            raise RuntimeError('N-Best used without limit')
         iterable = nsort(docids, self._rev_index)
         for value, docid in heapq.nlargest(limit, iterable):
             yield docid

@@ -1,6 +1,10 @@
 import unittest
+from repoze.catalog.catalog import ICatalogIndex
+from zope.interface import implementer
+
 
 _marker = object()
+
 
 class TestCatalog(unittest.TestCase):
     def _getTargetClass(self):
@@ -158,7 +162,7 @@ class TestCatalog(unittest.TestCase):
         c2 = IFSet([3, 4, 5])
         idx2 = DummyIndex(c2)
         catalog['name2'] = idx2
-        numdocs, result = catalog.apply({'name1':{}, 'name2':{}})
+        numdocs, result = catalog.apply({'name1': {}, 'name2': {}})
         self.assertEqual(numdocs, 1)
         self.assertEqual(numdocs.total, 1)
         self.assertEqual(list(result), [3])
@@ -376,19 +380,19 @@ class TestResultSetSize(unittest.TestCase):
         self.assertEqual(unpickled.total, 2)
         self.assertEqual(repr(unpickled), 'ResultSetSize(1, 2)')
 
+
 class DummyConnection:
     def close(self):
         self.closed = True
+
 
 class DummyTransaction:
     def commit(self):
         self.committed = True
 
-from repoze.catalog.catalog import ICatalogIndex
-from zope.interface import implements
 
+@implementer(ICatalogIndex)
 class DummyIndex(object):
-    implements(ICatalogIndex)
 
     value = None
     docid = None

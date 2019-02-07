@@ -4,13 +4,16 @@ except: # pragma no cover
     from md5 import new as md5
 
 from persistent import Persistent
-from zope.interface import implements
+from zope.interface import implementer
 
 from repoze.catalog.indexes.keyword import CatalogKeywordIndex
 from repoze.catalog.interfaces import ICatalogIndex
+import six
 
 _marker = ()
 
+
+@implementer(ICatalogIndex)
 class CatalogFacetIndex(CatalogKeywordIndex):
     """Facet index.
 
@@ -32,11 +35,10 @@ class CatalogFacetIndex(CatalogKeywordIndex):
 
     - NotAll
     """
-    implements(ICatalogIndex)
 
     def __init__(self, discriminator, facets, family=None):
         if not callable(discriminator):
-            if not isinstance(discriminator, basestring):
+            if not isinstance(discriminator, six.string_types):
                 raise ValueError('discriminator value must be callable or a '
                                  'string')
         self.discriminator = discriminator

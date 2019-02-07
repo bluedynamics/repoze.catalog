@@ -45,6 +45,7 @@ average it will have a smaller result set.
 
 That's the theory anyway.  Let's see who wins.
 """
+from __future__ import print_function
 import glob
 import math
 import os
@@ -57,6 +58,7 @@ from repoze.catalog.catalog import FileStorageCatalogFactory
 from repoze.catalog.indexes.field import CatalogFieldIndex
 from repoze.catalog.query import Eq
 from repoze.catalog.query import BoolOp
+from six.moves import range
 
 _marker = object()
 random.seed()
@@ -128,29 +130,29 @@ def do_benchmark(fname, nd, nk1, nk2, out=sys.stdout):
     cumulative1 = 0.0
     cumulative2 = 0.0
 
-    print >>out, "Index 1:"
-    print >>out, "\t# docs: %d" % nd
-    print >>out, "\t# distinct keys: %d" % nk1
-    print >>out, "Index 2:"
-    print >>out, "\t# docs: %d" % nd
-    print >>out, "\t# distinct keys: %d" % nk2
-    print >>out, ""
+    print("Index 1:", file=out)
+    print("\t# docs: %d" % nd, file=out)
+    print("\t# distinct keys: %d" % nk1, file=out)
+    print("Index 2:", file=out)
+    print("\t# docs: %d" % nd, file=out)
+    print("\t# distinct keys: %d" % nk2, file=out)
+    print("", file=out)
 
     cost1, cost2 = predictions(nd, nk1, nk2)
 
-    print >>out, 'Cost1: %0.2f' % cost1
-    print >>out, 'Cost2: %0.2f' % cost2
-    print >>out
-    print >>out, "Prediction:"
+    print('Cost1: %0.2f' % cost1, file=out)
+    print('Cost2: %0.2f' % cost2, file=out)
+    print(file=out)
+    print("Prediction:", file=out)
     if cost1 > cost2:
-        print >>out, "Algorithm 2 %0.2f times faster than Algorithm 1" % (
-            cost1/cost2)
+        print("Algorithm 2 %0.2f times faster than Algorithm 1" % (
+            cost1/cost2), file=out)
     else:
-        print >>out, "Algorithm 1 %0.2f times faster than Algorithm 2" % (
-            cost2/cost1)
+        print("Algorithm 1 %0.2f times faster than Algorithm 2" % (
+            cost2/cost1), file=out)
 
-    print >>out, ""
-    print >>out, "Setting up indexes..."
+    print("", file=out)
+    print("Setting up indexes...", file=out)
     for fn in glob.glob(fname + "*"):
         os.remove(fn)
 
@@ -166,15 +168,15 @@ def do_benchmark(fname, nd, nk1, nk2, out=sys.stdout):
             self.one = str(docid % nk1)
             self.two = str(docid % nk2)
 
-    for docid in xrange(nd):
+    for docid in range(nd):
         catalog.index_doc(docid, Document(docid))
     manager.commit()
     manager.close()
 
     N_QUERIES = 1000
-    print >>out, "Running %d queries for each algorithm..." % N_QUERIES
+    print("Running %d queries for each algorithm..." % N_QUERIES, file=out)
     catalog = factory(manager)
-    for _ in xrange(1000):
+    for _ in range(1000):
         key1 = random.randrange(nk1)
         key2 = random.randrange(nk2)
         query1 = Intersection1(Eq('one', str(key1)), Eq('two', str(key2)))
@@ -197,16 +199,16 @@ def do_benchmark(fname, nd, nk1, nk2, out=sys.stdout):
     for fn in glob.glob(fname + "*"):
         os.remove(fn)
 
-    print >>out, ""
-    print >>out, "Result:"
-    print >>out, "Time for algorithm1: %0.3f s" % cumulative1
-    print >>out, "Time for algorithm2: %0.3f s" % cumulative2
+    print("", file=out)
+    print("Result:", file=out)
+    print("Time for algorithm1: %0.3f s" % cumulative1, file=out)
+    print("Time for algorithm2: %0.3f s" % cumulative2, file=out)
     if cumulative1 > cumulative2:
-        print >>out, "Algorithm 2 %0.2f times faster than Algorithm 1" % (
-            cumulative1/cumulative2)
+        print("Algorithm 2 %0.2f times faster than Algorithm 1" % (
+            cumulative1/cumulative2), file=out)
     else:
-        print >>out, "Algorithm 1 %0.2f times faster than Algorithm 2" % (
-            cumulative2/cumulative1)
+        print("Algorithm 1 %0.2f times faster than Algorithm 2" % (
+            cumulative2/cumulative1), file=out)
     return cost1 / cost2, cumulative1 / cumulative2
 
 class Null(object):
@@ -217,8 +219,8 @@ def _range_order_of_magnitude(n):
     # Iterate over (at most) 3 orders of magnitude
     n_magnitude = int(math.ceil(math.log10(n)))
     lowest_magnitude = max(0, n_magnitude - 3)
-    for magnitude in xrange(lowest_magnitude, n_magnitude):
-        for i in xrange(1,10):
+    for magnitude in range(lowest_magnitude, n_magnitude):
+        for i in range(1,10):
             value = i * 10**magnitude
             if value >= n:
                 break
@@ -226,16 +228,16 @@ def _range_order_of_magnitude(n):
 
 def do_benchmarks(fname):
     null = Null()
-    print "Cost of algorithm 1 / Cost of algorithm 2"
-    print "N Docs | N Keys 1 | N Keys 2 | Predicted | Actual | Correct"
+    print("Cost of algorithm 1 / Cost of algorithm 2")
+    print("N Docs | N Keys 1 | N Keys 2 | Predicted | Actual | Correct")
     for nd in  [100, 1000, 10000, 100000, 1000000]:
         for nk1 in _range_order_of_magnitude(nd / 2):
             for nk2 in _range_order_of_magnitude(nd):
                 predicted, actual = do_benchmark(fname, nd, nk1, nk2, out=null)
                 correct = ((predicted >= 1 and actual >= 1) or
                            (predicted < 1 and actual < 1))
-                print "%6d | %8d | %8d | %9.2f | %6.2f | %s" % (
-                    nd, nk1, nk2,  predicted, actual, correct)
+                print("%6d | %8d | %8d | %9.2f | %6.2f | %s" % (
+                    nd, nk1, nk2,  predicted, actual, correct))
                 sys.stdout.flush()
 
 # profile (unused right now)
@@ -252,7 +254,9 @@ def profile(cmd, globals, locals, sort_order, callers):
         stats = pstats.Stats(fn)
         stats.strip_dirs()
         # calls,time,cumulative and cumulative,calls,time are useful
-        stats.sort_stats(*sort_order or ('cumulative', 'calls', 'time'))
+        if not sort_order:
+            sort_order = ('cumulative', 'calls', 'time')
+        stats.sort_stats(*sort_order)
         if callers:
             stats.print_callers(.3)
         else:
@@ -261,11 +265,11 @@ def profile(cmd, globals, locals, sort_order, callers):
         os.remove(fn)
 
 def rerun_predictions(fname):
-    benchmarks = open(fname).xreadlines()
-    benchmarks.next(); benchmarks.next()  # skip header lines
+    benchmarks = open(fname)
+    next(benchmarks); next(benchmarks)  # skip header lines
 
-    print "Cost of algorithm 1 / Cost of algorithm 2"
-    print "nd     | nd/nk1   | nd/nk2   | Predicted | Actual | Correct"
+    print("Cost of algorithm 1 / Cost of algorithm 2")
+    print("nd     | nd/nk1   | nd/nk2   | Predicted | Actual | Correct")
 
     gain = count = n_correct = 0
     for line in benchmarks:
@@ -278,8 +282,8 @@ def rerun_predictions(fname):
         predicted = cost1 / cost2
         correct = ((predicted >= 1 and actual >= 1) or
                    (predicted < 1 and actual < 1))
-        print "%6d | %8d | %8d | %9.2f | %6.2f | %s" % (
-            nd, nd/nk1, nd/nk2,  predicted, actual, correct)
+        print("%6d | %8d | %8d | %9.2f | %6.2f | %s" % (
+            nd, nd/nk1, nd/nk2,  predicted, actual, correct))
         count += 1
         if correct:
             n_correct += 1
@@ -291,9 +295,9 @@ def rerun_predictions(fname):
             # I picked algorith2, so note difference in performance
             gain += actual
 
-    print "-" * 79
-    print "%% correct: %0.1f" % (n_correct * 100.0 / count)
-    print "%% performance gain: %0.1f" % ((gain / count - 1.0) * 100.0)
+    print("-" * 79)
+    print("%% correct: %0.1f" % (n_correct * 100.0 / count))
+    print("%% performance gain: %0.1f" % ((gain / count - 1.0) * 100.0))
 
 if __name__ == '__main__':
     #do_benchmark('benchmark.db', 10000, 1000, 1000)
